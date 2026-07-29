@@ -49,9 +49,14 @@ ContainersPath: ~/containers-storage
 ApiKey: <api-key-value>
 ```
 
-`ApiKey` goes into the `X-API-Key` header and is required by the **writes** — upload and delete.
+`ApiKey` goes into the `X-API-Key` header and is required by two groups of endpoints:
 
-Everything that only reads — `list`, `tags`, `hash`, `download` — is open and carries no key.
+- **writes** — upload / delete;
+- **the containers list** — enumerating what the registry holds is not something an anonymous
+  caller gets.
+
+`tags`, `hash` and `download` stay open: a caller that already knows the container name reads its
+builds without carrying a key.
 
 `ApiKey` is optional — when it is not in the settings file, everything is open (same convention as
 my-files-storage).
@@ -79,7 +84,7 @@ The split is on the **last** `:`, so everything after the final colon is the tag
 | POST | `/api/containers/v1/upload/{container}` | `X-API-Key` | Body is the zip itself. Hash is calculated, blob is stored, tag points at it. |
 | GET | `/api/containers/v1/download/{container}` | — | Resolves tag into a hash, returns the zip as `{container_name}-{tag}.zip` |
 | GET | `/api/containers/v1/hash/{container}` | — | Hash of one tag, without downloading the zip |
-| GET | `/api/containers/v1/list` | — | All containers with their tag counts |
+| GET | `/api/containers/v1/list` | `X-API-Key` | All containers with their tag counts |
 | GET | `/api/containers/v1/tags/{containerName}` | — | Every tag of a container (name only, no tag) with the hash it points at, plus size / uploaded_at / uploaded_by |
 | DELETE | `/api/containers/v1/tag/{container}` | `X-API-Key` | Removes the tag, and the blob if no other tag references it |
 | GET | `/api/system/v1/ping` | — | Liveness probe |
