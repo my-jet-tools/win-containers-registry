@@ -13,10 +13,6 @@ pub struct GetContainerTagsInputModel {
         description = "Container name. Example: mt4-bridge"
     )]
     pub container_name: String,
-
-    // default = "" so that a missing header comes back as 401, not as a 400 validation error
-    #[http_header(name = "X-API-Key", description = "Api key", default = "")]
-    pub api_key: String,
 }
 
 #[derive(Serialize, Deserialize, MyHttpObjectStructure)]
@@ -38,7 +34,6 @@ pub struct ContainerTagHttpModel {
     result: [
         {status_code: 200, description: "Container tags", model: "Vec<ContainerTagHttpModel>"},
         {status_code: 400, description: "Invalid container name"},
-        {status_code: 401, description: "Invalid or missing api key"},
         {status_code: 404, description: "Container not found"},
     ]
 )]
@@ -57,12 +52,8 @@ async fn handle_request(
     input_data: GetContainerTagsInputModel,
     _ctx: &HttpContext,
 ) -> Result<HttpOkResult, HttpFailResult> {
-    let tags = crate::flows::get_container_tags(
-        &action.app,
-        input_data.container_name.as_str(),
-        input_data.api_key.as_str(),
-    )
-    .await?;
+    let tags =
+        crate::flows::get_container_tags(&action.app, input_data.container_name.as_str()).await?;
 
     let response: Vec<ContainerTagHttpModel> = tags
         .into_iter()

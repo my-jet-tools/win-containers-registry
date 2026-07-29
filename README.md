@@ -52,11 +52,11 @@ ApiKey: <api-key-value>
 `ApiKey` goes into the `X-API-Key` header and is required by two groups of endpoints:
 
 - **writes** — upload / delete;
-- **browsing** — the containers list and the tags of a container. Enumerating what the registry
-  holds is not something an anonymous caller gets.
+- **the containers list** — enumerating what the registry holds is not something an anonymous
+  caller gets.
 
-`download` and `hash` stay open: a target machine pulls a build it already knows the name of without
-carrying a key.
+`download`, `hash` and `tags` stay open: a caller that already knows the container name pulls its
+builds without carrying a key.
 
 `ApiKey` is optional — when it is not in the settings file, everything is open (same convention as
 my-files-storage).
@@ -85,7 +85,7 @@ The split is on the **last** `:`, so everything after the final colon is the tag
 | GET | `/api/containers/v1/download/{container}` | — | Resolves tag into a hash, returns the zip as `{container_name}-{tag}.zip` |
 | GET | `/api/containers/v1/hash/{container}` | — | Hash of one tag, without downloading the zip |
 | GET | `/api/containers/v1/list` | `X-API-Key` | All containers with their tag counts |
-| GET | `/api/containers/v1/tags/{containerName}` | `X-API-Key` | Every tag of a container (name only, no tag) with the hash it points at, plus size / uploaded_at / uploaded_by |
+| GET | `/api/containers/v1/tags/{containerName}` | — | Every tag of a container (name only, no tag) with the hash it points at, plus size / uploaded_at / uploaded_by |
 | DELETE | `/api/containers/v1/tag/{container}` | `X-API-Key` | Removes the tag, and the blob if no other tag references it |
 | GET | `/api/system/v1/ping` | — | Liveness probe |
 
@@ -139,8 +139,7 @@ record.
 ### List every tag of a container and what it points at
 
 ```bash
-curl -s "https://<host>/api/containers/v1/tags/mt4-bridge" \
-     -H "X-API-Key: $WIN_CONTAINERS_API_KEY"
+curl -s "https://<host>/api/containers/v1/tags/mt4-bridge"
 ```
 
 ```json
